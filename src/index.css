@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  
+  --color-bg-light: #f9fafb;
+  --color-bg-dark: #111827;
+  
+  --color-card-light: #ffffff;
+  --color-card-dark: #1f2937;
+}
+
+@layer base {
+  :root {
+    --background: var(--color-bg-light);
+    --foreground: #111827;
+    --card: var(--color-card-light);
+    --card-foreground: #111827;
+    --border: #e5e7eb;
+    --primary: var(--color-primary-600);
+    --primary-foreground: #ffffff;
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
+  }
+
+  .dark {
+    --background: var(--color-bg-dark);
+    --foreground: #f9fafb;
+    --card: var(--color-card-dark);
+    --card-foreground: #f9fafb;
+    --border: #374151;
+    --primary: var(--color-primary-500);
+    --primary-foreground: #ffffff;
+    --muted: #374151;
+    --muted-foreground: #9ca3af;
+  }
+
+  .theme-cyberpunk {
+    --background: #0d0221;
+    --foreground: #ffffff;
+    --card: #190e38;
+    --card-foreground: #ffffff;
+    --border: #4d1d82;
+    --primary: #ff00e6;
+    --primary-foreground: #ffffff;
+    --muted: #2a0e4a;
+    --muted-foreground: #b166ff;
+  }
+
+  .theme-tropical {
+    --background: #e6fffa;
+    --foreground: #134e4a;
+    --card: #ffffff;
+    --card-foreground: #134e4a;
+    --border: #b2f5ea;
+    --primary: #00b5ad;
+    --primary-foreground: #ffffff;
+    --muted: #f0fff4;
+    --muted-foreground: #2c7a7b;
+  }
+
+  .theme-rose {
+    --background: #fff5f7;
+    --foreground: #702459;
+    --card: #ffffff;
+    --card-foreground: #702459;
+    --border: #fed7e2;
+    --primary: #d53f8c;
+    --primary-foreground: #ffffff;
+    --muted: #fff5f7;
+    --muted-foreground: #b83280;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+

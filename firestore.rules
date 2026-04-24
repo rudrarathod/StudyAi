@@ -1,0 +1,122 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - name: string (required, length < 100)
+    //   - email: string (required, valid email)
+    //   - createdAt: string (required, valid date string, immutable)
+    //   - notificationsEnabled: boolean (optional)
+    //   - darkMode: boolean (optional)
+    //   - role: string (optional, 'student' or 'admin')
+    //
+    // Collection: notes
+    // Document ID: {noteId}
+    // Fields:
+    //   - title: string (required, length < 500)
+    //   - subject: string (required, length < 200)
+    //   - content: string (required, length < 1,000,000)
+    //   - tags: list of strings (optional, size < 50)
+    //   - author: string (required, length < 100)
+    //   - userId: string (required, must match auth.uid)
+    //   - date: string (required)
+    //   - isPublic: boolean (required)
+    //   - views: string (optional)
+    //   - fileData: string (optional)
+    //   - mimeType: string (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      let isDefaultAdmin = (request.auth.token.email == "rudrarathod738@gmail.com" && request.auth.token.email_verified == true);
+      let isDbAdmin = isAuthenticated() && 
+                      exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isDefaultAdmin || isDbAdmin;
+    }
+    
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+    
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'email', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) &&
+             isValidDateString(data.createdAt) &&
+             (!('notificationsEnabled' in data) || data.notificationsEnabled is bool) &&
+             (!('darkMode' in data) || data.darkMode is bool) &&
+             (!('role' in data) || data.role in ['student', 'admin']);
+    }
+
+    function isValidNote(data) {
+      return data.keys().hasAll(['title', 'subject', 'content', 'author', 'userId', 'date', 'isPublic']) &&
+             data.title is string && data.title.size() < 500 &&
+             data.subject is string && data.subject.size() < 200 &&
+             data.content is string && data.content.size() < 1000000 &&
+             data.author is string && data.author.size() < 100 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.date is string && data.date.size() < 100 &&
+             data.isPublic is bool &&
+             (!('tags' in data) || (data.tags is list && data.tags.size() < 50)) &&
+             (!('views' in data) || data.views is string) &&
+             (!('fileData' in data) || data.fileData is string) &&
+             (!('mimeType' in data) || data.mimeType is string);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && 
+                    isValidUser(request.resource.data) &&
+                    request.resource.data.createdAt == resource.data.createdAt &&
+                    request.resource.data.email == resource.data.email &&
+                    (request.resource.data.role == resource.data.role || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    match /notes/{noteId} {
+      // Notes are readable if they are public OR owned by the user
+      allow read: if resource.data.isPublic == true || 
+                    (isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()));
+      
+      allow create: if isAuthenticated() && isValidNote(request.resource.data);
+      
+      allow update: if (isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin())) && 
+                    isValidNote(request.resource.data) &&
+                    request.resource.data.userId == resource.data.userId;
+      
+      allow delete: if (isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin()));
+    }
+  }
+}
