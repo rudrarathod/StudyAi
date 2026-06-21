@@ -1,8 +1,32 @@
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize the Gemini API client
-// The API key is injected by Vite via process.env.GEMINI_API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+function getApiKey(): string {
+  try {
+    const key = process.env.GEMINI_API_KEY;
+    if (key && key !== "undefined" && key !== "MY_GEMINI_API_KEY") {
+      return key;
+    }
+  } catch (e) {
+    // process.env might not be defined
+  }
+  return localStorage.getItem("GEMINI_API_KEY") || "";
+}
+
+let cachedClient: { key: string; instance: GoogleGenAI } | null = null;
+
+function getAI(): GoogleGenAI {
+  const key = getApiKey();
+  if (!key) {
+    throw new Error("Gemini API Key is not set. Please configure your API key in Profile settings.");
+  }
+  if (!cachedClient || cachedClient.key !== key) {
+    cachedClient = {
+      key,
+      instance: new GoogleGenAI({ apiKey: key })
+    };
+  }
+  return cachedClient.instance;
+}
 
 export async function chatWithNotes(
   messages: { role: string; content: string }[], 
@@ -17,7 +41,7 @@ export async function chatWithNotes(
     Notes Context:
     ${notesContext}`;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: messages.map((msg, index) => {
         // Only attach the inlineData to the last user message to provide context
@@ -59,7 +83,7 @@ export async function generateFlashcards(noteContent: string, inlineData?: { dat
       parts.push({ inlineData });
     }
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: parts,
       config: {
@@ -89,7 +113,7 @@ export async function generateSummary(noteContent: string, inlineData?: { data: 
       parts.push({ inlineData });
     }
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: parts,
       config: {
@@ -124,7 +148,7 @@ export async function generateQuiz(noteContent: string, inlineData?: { data: str
       parts.push({ inlineData });
     }
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash",
       contents: parts,
       config: {

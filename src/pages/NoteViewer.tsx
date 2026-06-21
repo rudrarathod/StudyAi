@@ -125,9 +125,15 @@ export function NoteViewer() {
         // Give them IDs
         const cardsWithIds = cards.map((c: any, i: number) => ({ ...c, id: i + 1 }));
         setFlashcards(cardsWithIds);
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
-        alert("Failed to generate flashcards. Please try again.");
+        if (error?.message?.includes("Gemini API Key")) {
+          if (confirm("Gemini API Key is not set. Would you like to go to your Profile settings to set it?")) {
+            navigate('/profile');
+          }
+        } else {
+          alert("Failed to generate flashcards. Please try again.");
+        }
       } finally {
         setIsGeneratingFlashcards(false);
       }
@@ -144,9 +150,15 @@ export function NoteViewer() {
         const inlineData = note.fileData && note.mimeType ? { data: note.fileData, mimeType: note.mimeType } : undefined;
         const quiz = await generateQuiz(note.content, inlineData);
         setCurrentQuiz(quiz);
-      } catch (error) {
+      } catch (error: any) {
         console.error(error);
-        alert("Failed to generate quiz. Please try again.");
+        if (error?.message?.includes("Gemini API Key")) {
+          if (confirm("Gemini API Key is not set. Would you like to go to your Profile settings to set it?")) {
+            navigate('/profile');
+          }
+        } else {
+          alert("Failed to generate quiz. Please try again.");
+        }
       } finally {
         setIsGeneratingQuiz(false);
       }
@@ -159,9 +171,15 @@ export function NoteViewer() {
       const inlineData = note.fileData && note.mimeType ? { data: note.fileData, mimeType: note.mimeType } : undefined;
       const result = await generateSummary(note.content, inlineData);
       setSummary(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to generate summary. Please try again.");
+      if (error?.message?.includes("Gemini API Key")) {
+        if (confirm("Gemini API Key is not set. Would you like to go to your Profile settings to set it?")) {
+          navigate('/profile');
+        }
+      } else {
+        alert("Failed to generate summary. Please try again.");
+      }
     } finally {
       setIsGeneratingSummary(false);
     }

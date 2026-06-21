@@ -64,12 +64,15 @@ export function AIChat() {
         content: response,
         sources: selectedNotes.length > 0 ? selectedNotes.map(n => n.title) : undefined
       }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
+      const isMissingKey = error?.message?.includes("Gemini API Key");
       setMessages(prev => [...prev, { 
         id: Date.now() + 1, 
         role: "ai", 
-        content: "Sorry, I encountered an error while trying to respond. Please try again." 
+        content: isMissingKey 
+          ? "Gemini API Key is not set. Please configure your API key in the [Profile](/profile) page."
+          : "Sorry, I encountered an error while trying to respond. Please try again." 
       }]);
     } finally {
       setIsLoading(false);

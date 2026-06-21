@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { User, Mail, BookOpen, Layers, CheckSquare, LogOut, Bell, Shield, Moon, Sun } from "lucide-react";
+import { User, Mail, BookOpen, Layers, CheckSquare, LogOut, Bell, Shield, Moon, Sun, Key } from "lucide-react";
 import { useAppContext } from "../context/AppContext";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,15 @@ export function Profile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [editForm, setEditForm] = useState({ name: user?.displayName || userProfile.name, email: user?.email || userProfile.email });
+  
+  const [geminiKey, setGeminiKey] = useState(() => localStorage.getItem("GEMINI_API_KEY") || "");
+  const [isKeySaved, setIsKeySaved] = useState(false);
+
+  const handleSaveGeminiKey = () => {
+    localStorage.setItem("GEMINI_API_KEY", geminiKey.trim());
+    setIsKeySaved(true);
+    setTimeout(() => setIsKeySaved(false), 2000);
+  };
 
   const handleSaveProfile = async () => {
     try {
@@ -205,6 +214,44 @@ export function Profile() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
+            <h3 className="mb-4 font-semibold flex items-center gap-2">
+              <Key className="h-5 w-5 text-indigo-500" />
+              AI Configuration
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5 text-[var(--muted-foreground)]">Gemini API Key</label>
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    placeholder="Paste your Gemini API Key here"
+                    value={geminiKey}
+                    onChange={(e) => setGeminiKey(e.target.value)}
+                    className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)]"
+                  />
+                  <button
+                    onClick={handleSaveGeminiKey}
+                    className="rounded-lg bg-[var(--primary)] px-4 py-2 text-sm font-medium text-white transition-all hover:bg-[var(--primary)]/90 active:scale-95 shrink-0"
+                  >
+                    {isKeySaved ? "Saved!" : "Save"}
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-[var(--muted-foreground)] leading-relaxed">
+                  Your key is stored only in your local browser storage. Get a free API Key from the{" "}
+                  <a
+                    href="https://aistudio.google.com/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[var(--primary)] font-medium hover:underline inline-flex items-center gap-0.5"
+                  >
+                    Google AI Studio
+                  </a>.
+                </p>
               </div>
             </div>
           </div>
